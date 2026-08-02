@@ -55,3 +55,7 @@ class Product(BaseModel):
     is_active: bool = Field(..., description="Активность товара")
 
     model_config = ConfigDict(from_attributes=True)
+
+class DeleteResponseSchema(BaseModel):
+    status: str
+    message: str
