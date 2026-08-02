@@ -26,14 +26,14 @@ async def get_all_categories(db: AsyncSession = Depends(get_async_db)):
 
 
 @router.get("/{category_id}", response_model=CategorySchema)
-async def get_category(category_id: int, db: Session = Depends(get_db)):
+async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db)):
     """
     Возвращает категорию по её ID.
     """
     stmt = select(CategoryModel).where(
         CategoryModel.id == category_id,
         CategoryModel.is_active == True)
-    category = db.scalars(stmt).first()
+    category = (await db.scalars(stmt)).first()
     if category is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
     return category
