@@ -1,6 +1,6 @@
-from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
+import datetime
 from app.database import Base
 
 
@@ -14,3 +14,12 @@ class User(Base):
     role: Mapped[str] = mapped_column(String, default="buyer")  # "buyer" or "seller"
 
     products: Mapped[list["Product"]] = relationship("Product", back_populates="seller")
+
+    # Новые поля для инвалидации токенов
+    token_version = Column(Integer, default=0, nullable=False)
+    # Опционально: список отозванных JTI (если нужна тонкая инвалидация)
+    # revoked_tokens = Column(JSON, default=list)
+
+    # Даты создания/обновления
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
