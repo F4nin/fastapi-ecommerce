@@ -54,6 +54,7 @@ class Product(BaseModel):
     image_url: str | None = Field(None, description="URL изображения товара")
     stock: int = Field(..., description="Количество товара на складе")
     category_id: int = Field(..., description="ID категории")
+    seller_id: int = Field(..., description="ID продавца")
     is_active: bool = Field(..., description="Активность товара")
     rating: float = Field(description="Рейтинг продукта")
 
