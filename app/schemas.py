@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from decimal import Decimal
 
@@ -53,6 +55,7 @@ class Product(BaseModel):
     stock: int = Field(..., description="Количество товара на складе")
     category_id: int = Field(..., description="ID категории")
     is_active: bool = Field(..., description="Активность товара")
+    rating: float = Field(description="Рейтинг продукта")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -63,7 +66,7 @@ class DeleteResponseSchema(BaseModel):
 class UserCreate(BaseModel):
     email: EmailStr = Field(description="Email пользователя")
     password: str = Field(min_length=8, description="Пароль (минимум 8 символов)")
-    role: str = Field(default="buyer", pattern="^(buyer|seller)$", description="Роль: 'buyer' или 'seller'")
+    role: str = Field(default="buyer", pattern="^(buyer|seller|admin)$", description="Роль: 'buyer', 'seller' или 'admin'")
 
 
 class User(BaseModel):
@@ -80,3 +83,27 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+
+class ReviewCreate(BaseModel):
+    """
+    Модель для создания и обновления отзыва.
+    Используется в POST и PUT запросах.
+    """
+    product_id: int = Field(..., description="Уникальный идентификатор продукта")
+    comment: str | None = Field(None, description="Описание комментария")
+    grade: int = Field(..., ge=1, le=5, description="Оценка товара (1-5)")
+
+class Review(BaseModel):
+    """
+    Модель для ответа с данными отзыва.
+    Используется в GET-запросах.
+    """
+    id: int = Field(..., description="Уникальный идентификатор отзыва")
+    user_id: int = Field(..., description="Уникальный идентификатор пользователя")
+    product_id: int = Field(..., description="Уникальный идентификатор товара")
+    comment: str | None = Field(None, description="Текст отзыва")
+    comment_date: datetime = Field(..., description="Время создания отзыва")
+    grade: int = Field(..., description="Оценка товара")
+    is_active: bool = Field(..., description="Активность отзыва")
+
+    model_config = ConfigDict(from_attributes=True)

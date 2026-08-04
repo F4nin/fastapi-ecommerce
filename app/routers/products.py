@@ -8,7 +8,9 @@ from app.schemas import Product as ProductSchema, DeleteResponseSchema
 from app.models.products import Product as ProductModel
 from app.models.categories import Category as CategoryModel
 from app.models.users import User as UserModel
+from app.models.reviews import Review as ReviewModel
 from app.schemas import ProductCreate
+from app.schemas import Review as ReviewSchema
 from sqlalchemy import select, update
 
 
@@ -145,4 +147,26 @@ async def delete_product(product_id: int, db: AsyncSession = Depends(get_async_d
         status="success",
         message="Product marked as inactive"
     )
+
+
+@router.get("/{product_id}/reviews/", response_model=list[ReviewSchema])
+async def get_product_reviews(product_id: int, db: AsyncSession = Depends(get_async_db)):
+    """
+    Возвращает список активных отзывов для указанного товара.
+    """
+    product = (await db.scalars(
+        select(ProductModel).where(
+            ProductModel.id == product_id,
+            ProductModel.is_active == True
+        )
+    )).first()
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found or inactive")
+
+    stmt = select(ReviewModel).where(
+        ReviewModel.product_id == product_id,
+        ReviewModel.is_active == True
+    )
+    reviews = (await db.scalars(stmt)).all()
+    return reviews
 
