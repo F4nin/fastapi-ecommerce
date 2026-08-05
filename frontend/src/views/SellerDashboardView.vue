@@ -10,11 +10,9 @@ import BaseBadge from '@/components/ui/BaseBadge.vue'
 const auth = useAuthStore()
 const productsStore = useProductsStore()
 
-onMounted(() => productsStore.fetchAll())
+onMounted(() => productsStore.fetchAll({ seller_id: auth.currentUser?.id, page_size: 100 }))
 
-const myProducts = computed(() =>
-  productsStore.products.filter((p) => p.seller_id === auth.currentUser?.id)
-)
+const myProducts = computed(() => productsStore.products)
 
 async function handleDelete(id: number) {
   if (!confirm('Удалить этот товар?')) return

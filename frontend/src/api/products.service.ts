@@ -1,9 +1,9 @@
 import apiClient from './client'
-import type { Product, ProductCreate, Review, DeleteResponse } from '@/types'
+import type { Product, ProductCreate, ProductListResponse, ProductFilters, Review, DeleteResponse } from '@/types'
 
 export const productsService = {
-  getAll() {
-    return apiClient.get<Product[]>('/products/')
+  getAll(params?: ProductFilters) {
+    return apiClient.get<ProductListResponse>('/products/', { params })
   },
 
   getById(id: number) {

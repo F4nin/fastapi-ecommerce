@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { productsService } from '@/api/products.service'
-import type { Product, ProductCreate, Review } from '@/types'
+import type { Product, ProductCreate, ProductFilters, Review } from '@/types'
 
 export const useProductsStore = defineStore('products', () => {
   const products = ref<Product[]>([])
@@ -9,13 +9,23 @@ export const useProductsStore = defineStore('products', () => {
   const productReviews = ref<Review[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const total = ref(0)
+  const currentPage = ref(1)
+  const pageSize = ref(20)
 
-  async function fetchAll() {
+  async function fetchAll(filters: ProductFilters = {}) {
     loading.value = true
     error.value = null
     try {
-      const { data } = await productsService.getAll()
-      products.value = data
+      const { data } = await productsService.getAll({
+        ...filters,
+        page: filters.page || 1,
+        page_size: filters.page_size || 20,
+      })
+      products.value = data.items
+      total.value = data.total
+      currentPage.value = data.page
+      pageSize.value = data.page_size
     } catch (e: any) {
       error.value = e?.response?.data?.detail || 'Ошибка загрузки товаров'
     } finally {
@@ -112,6 +122,9 @@ export const useProductsStore = defineStore('products', () => {
     productReviews,
     loading,
     error,
+    total,
+    currentPage,
+    pageSize,
     fetchAll,
     fetchById,
     fetchByCategory,

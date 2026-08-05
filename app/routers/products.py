@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from starlette import status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,9 +36,23 @@ async def get_all_products(
             None, description="true — только товары в наличии, false — только без остатка"),
         seller_id: int | None = Query(
             None, description="ID продавца для фильтрации"),
+        created_after: datetime | None = Query(
+            None, description="Товары, созданные после этой даты (ISO 8601)"),
+        created_before: datetime | None = Query(
+            None, description="Товары, созданные до этой даты (ISO 8601)"),
+        updated_after: datetime | None = Query(
+            None, description="Товары, обновлённые после этой даты (ISO 8601)"),
+        updated_before: datetime | None = Query(
+            None, description="Товары, обновлённые до этой даты (ISO 8601)"),
+        sort_by: str = Query(
+            "id", pattern="^(id|created_at|price|rating)$",
+            description="Поле для сортировки: id, created_at, price, rating"),
+        order: str = Query(
+            "asc", pattern="^(asc|desc)$",
+            description="Направление: asc (возрастание) или desc (убывание)"),
         db: AsyncSession = Depends(get_async_db)):
         """
-        Возвращает список всех активных товаров с поддержкой фильтров.
+        Возвращает список всех активных товаров с поддержкой фильтров и сортировки.
         """
         # Проверка логики min_price <= max_price
         if min_price is not None and max_price is not None and min_price > max_price:
@@ -57,11 +73,30 @@ async def get_all_products(
             filters.append(ProductModel.stock > 0 if in_stock else ProductModel.stock == 0)
         if seller_id is not None:
             filters.append(ProductModel.seller_id == seller_id)
+        if created_after is not None:
+            filters.append(ProductModel.created_at >= created_after)
+        if created_before is not None:
+            filters.append(ProductModel.created_at <= created_before)
+        if updated_after is not None:
+            filters.append(ProductModel.updated_at >= updated_after)
+        if updated_before is not None:
+            filters.append(ProductModel.updated_at <= updated_before)
+
+        # Сортировка
+        sort_column = getattr(ProductModel, sort_by)
+        if order == "desc":
+            sort_column = sort_column.desc()
 
         total_stmt = select(func.count()).select_from(ProductModel).where(*filters)
         total = await db.scalar(total_stmt) or 0
 
-        stmt = select(ProductModel).where(ProductModel.is_active == True).order_by(ProductModel.id).offset((page - 1) * page_size)
+        stmt = (
+            select(ProductModel)
+            .where(*filters)
+            .order_by(sort_column)
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
         items = (await db.scalars(stmt)).all()
         return {
             "items": items,

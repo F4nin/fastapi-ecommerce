@@ -21,6 +21,31 @@ export interface Product {
   seller_id: number
   is_active: boolean
   rating: number
+  created_at: string
+  updated_at: string | null
+}
+
+export interface ProductFilters {
+  category_id?: number | null
+  min_price?: number | null
+  max_price?: number | null
+  in_stock?: boolean | null
+  seller_id?: number | null
+  created_after?: string | null
+  created_before?: string | null
+  updated_after?: string | null
+  updated_before?: string | null
+  sort_by?: string
+  order?: string
+  page?: number
+  page_size?: number
+}
+
+export interface ProductListResponse {
+  items: Product[]
+  total: number
+  page: number
+  page_size: number
 }
 
 export interface ProductCreate {
