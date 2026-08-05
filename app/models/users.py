@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
-import datetime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
+from datetime import datetime
 from app.database import Base
 
 
@@ -22,5 +22,5 @@ class User(Base):
     # revoked_tokens = Column(JSON, default=list)
 
     # Даты создания/обновления
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
