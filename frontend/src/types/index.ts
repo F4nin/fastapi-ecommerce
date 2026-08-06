@@ -26,6 +26,7 @@ export interface Product {
 }
 
 export interface ProductFilters {
+  search?: string
   category_id?: number | null
   min_price?: number | null
   max_price?: number | null

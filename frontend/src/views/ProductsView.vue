@@ -6,11 +6,14 @@ import ProductGrid from '@/components/product/ProductGrid.vue'
 import CategoryTree from '@/components/category/CategoryTree.vue'
 import BaseSpinner from '@/components/ui/BaseSpinner.vue'
 import BasePagination from '@/components/ui/BasePagination.vue'
+import { useDebounce } from '@/composables/useDebounce'
 
 const productsStore = useProductsStore()
 const categoriesStore = useCategoriesStore()
 
 const selectedCategoryId = ref<number | null>(null)
+const searchQuery = ref('')
+const debouncedSearch = useDebounce(searchQuery, 400)
 const createdAfter = ref('')
 const createdBefore = ref('')
 const sortBy = ref('id')
@@ -22,6 +25,7 @@ onMounted(async () => {
 
 function buildFilters() {
   return {
+    search: debouncedSearch.value || undefined,
     category_id: selectedCategoryId.value,
     created_after: createdAfter.value || undefined,
     created_before: createdBefore.value || undefined,
@@ -36,7 +40,7 @@ async function loadProducts() {
   await productsStore.fetchAll(buildFilters())
 }
 
-watch([selectedCategoryId, sortBy, order], () => {
+watch([selectedCategoryId, sortBy, order, debouncedSearch], () => {
   productsStore.currentPage = 1
   loadProducts()
 })
@@ -57,6 +61,7 @@ function handleDateFilter() {
 
 function clearFilters() {
   selectedCategoryId.value = null
+  searchQuery.value = ''
   createdAfter.value = ''
   createdBefore.value = ''
   sortBy.value = 'id'
@@ -143,6 +148,14 @@ const totalPages = computed(() => Math.ceil(productsStore.total / productsStore.
       </aside>
 
       <div class="flex-1">
+        <div class="mb-4">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Поиск по названию товара..."
+            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
         <BaseSpinner v-if="productsStore.loading" />
         <template v-else>
           <p class="text-sm text-gray-500 mb-4">Всего: {{ productsStore.total }}</p>
